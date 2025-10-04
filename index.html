@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arshpreet Singh | Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Three.js Library for 3D graphics -->
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1e293b; /* New lighter theme: slate-800 */
+            color: #E2E8F0; /* slate-200 */
+            overflow-x: hidden;
+        }
+        
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            outline: none;
+            z-index: -1;
+        }
+
+        #skills-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.6;
+        }
+
+        /* --- Glassmorphism Effect --- */
+        .glass-card {
+            background: rgba(51, 65, 85, 0.5); /* Lighter: slate-700 with 50% opacity */
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem; /* rounded-2xl */
+        }
+        
+        .glass-header {
+             background: rgba(30, 41, 59, 0.7); /* Lighter: slate-800 with 70% opacity */
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- Animated Skill Marquee in Header --- */
+        .skill-marquee {
+            background: linear-gradient(90deg, #60a5fa, #4ade80, #facc15, #60a5fa);
+            background-size: 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradient-text 10s linear infinite;
+        }
+        @keyframes gradient-text {
+            to { background-position: 200%; }
+        }
+        
+        /* --- Header Nav Link Hover & Active Effect --- */
+        nav a {
+            position: relative;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        nav a:hover, nav a.active {
+            background-color: rgba(71, 85, 105, 0.5);
+            color: #ffffff;
+        }
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: calc(100% - 32px); /* Match padding */
+            transform: scaleX(0);
+            height: 2px;
+            bottom: 4px;
+            left: 16px;
+            background: linear-gradient(90deg, #60a5fa, #4ade80, #facc15);
+            transform-origin: bottom right;
+            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        nav a:hover::after, nav a.active::after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+
+
+        /* --- Fullscreen Mobile Menu --- */
+        #mobile-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+        }
+        #mobile-menu.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        #mobile-menu nav a {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        #close-menu-btn {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+        }
+        
+        /* --- New Skills Section --- */
+        #skills.skills-gradient-bg {
+             background: linear-gradient(180deg, #1e40af 0%, #1d4ed8 20%, #059669 50%, #909337 80%, #d1d54b 100%);
+        }
+        
+        /* --- Back to top button --- */
+        #back-to-top-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: rgba(51, 65, 85, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+            z-index: 100;
+        }
+        #back-to-top-btn.active {
+            opacity: 1;
+            visibility: visible;
+        }
+         #back-to-top-btn:hover {
+            transform: scale(1.1);
+            background-color: rgba(71, 85, 105, 0.8);
+        }
+
+        /* --- Scroll Animation --- */
+        .reveal {
+            position: relative;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 1s all ease;
+        }
+
+        .reveal.active {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- ===== Header ===== -->
+    <header id="header" class="glass-header fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="#home" class="flex items-center gap-3 text-2xl font-bold text-white transition-all hover:skill-marquee">
+                    <img src="arsh.jpg" alt="Arshpreet Singh DP" class="h-10 w-10 rounded-full border-2 border-slate-500">
+                    Arshpreet Singh
+                </a>
+                
+                <!-- Desktop Menu -->
+                <nav class="hidden md:flex space-x-2">
+                    <a href="#about" class="text-slate-300">About</a>
+                    <a href="resume.html" target="_blank" class="text-slate-300">Resume</a>
+                    <a href="#skills" class="text-slate-300">Skills</a>
+                    <a href="#projects" class="text-slate-300">Projects</a>
+                    <a href="#education" class="text-slate-300">Education</a>
+                    <a href="#contact" class="text-slate-300">Contact</a>
+                </nav>
+                
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-white">
+                    <i data-lucide="menu" class="h-6 w-6"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Fullscreen Mobile Menu -->
+    <div id="mobile-menu">
+        <button id="close-menu-btn" class="text-white">
+            <i data-lucide="x" class="h-10 w-10"></i>
+        </button>
+        <nav class="flex flex-col items-center space-y-8">
+            <a href="#about" class="text-slate-300">About</a>
+            <a href="resume.html" target="_blank" class="text-slate-300">Resume</a>
+            <a href="#skills" class="text-slate-300">Skills</a>
+            <a href="#projects" class="text-slate-300">Projects</a>
+            <a href="#education" class="text-slate-300">Education</a>
+            <a href="#contact" class="text-slate-300">Contact</a>
+        </nav>
+    </div>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 relative z-10">
+        <!-- ===== Hero Section ===== -->
+        <section id="home" class="min-h-[calc(100vh-6rem)] flex items-center reveal">
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="text-center md:text-left">
+                    <h1 class="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white leading-tight">
+                        Hello, I'm Arshpreet Singh
+                    </h1>
+                    <p class="mt-6 text-lg md:text-xl text-slate-300 max-w-xl">
+                        A passionate <span class="text-green-400 font-semibold">Android</span> and <span class="text-yellow-400 font-semibold">Web Developer</span> specializing in building high-performance, intuitive applications with a focus on <span class="text-blue-400 font-semibold">Cloud</span> technologies.
+                    </p>
+                    <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                        <a href="#contact" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-transform duration-300 hover:scale-105 text-center">Say Hello!</a>
+                        <a href="Arshpreet resume.pdf" download="Arshpreet_Singh_Resume.pdf" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-transform duration-300 hover:scale-105 text-center flex items-center justify-center gap-2">
+                            <i data-lucide="download" class="h-5 w-5"></i>
+                            Download Resume
+                        </a>
+                    </div>
+                </div>
+                 <div class="relative h-96 md:h-full flex items-center justify-center z-10">
+                    <img src="arsh.jpg" alt="Arshpreet Singh" class="w-64 h-64 md:w-80 md:h-80 rounded-full object-cover glass-card p-2 z-20 relative">
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== About Section ===== -->
+        <section id="about" class="py-20 lg:py-32 reveal">
+            <h2 class="text-3xl md:text-5xl font-bold text-center text-white mb-16">About Me</h2>
+            <div class="glass-card p-8 md:p-12">
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="md:col-span-2">
+                        <h3 class="text-2xl font-semibold text-white mb-4">Profile Summary</h3>
+                        <p class="text-slate-300 leading-relaxed">
+                            Passionate Computer Science student specializing in Android development with Java, focused on building high-performance, intuitive mobile apps. Experienced with Firebase, AWS integration, and familiar with DevOps and front-end tools. Eager to contribute to innovative, mobile-first projects and deliver impactful user experiences.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold text-white mb-4">Interpersonal Skills</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-center gap-3"><i data-lucide="check-circle" class="h-5 w-5 text-green-400"></i><span>Effective Team Management</span></li>
+                            <li class="flex items-center gap-3"><i data-lucide="check-circle" class="h-5 w-5 text-green-400"></i><span>Leadership and Adaptability</span></li>
+                            <li class="flex items-center gap-3"><i data-lucide="check-circle" class="h-5 w-5 text-green-400"></i><span>Creative Problem-Solving</span></li>
+                            <li class="flex items-center gap-3"><i data-lucide="check-circle" class="h-5 w-5 text-green-400"></i><span>Fast Learner</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== New Skills Section ===== -->
+    <section id="skills" class="skills-gradient-bg relative overflow-hidden py-20 lg:py-32 reveal">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl md:text-5xl font-bold text-center text-white mb-20 z-20 relative">Technical Expertise</h2>
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                 <div class="max-w-3xl space-y-24 z-20 relative">
+                    <!-- Cloud Computing -->
+                    <div class="reveal">
+                        <div class="flex items-center gap-4 mb-6">
+                            <i data-lucide="cloud-cog" class="h-12 w-12 text-blue-300"></i>
+                            <div>
+                                <h3 class="text-3xl font-bold text-white">Cloud & DevOps</h3>
+                                <p class="text-blue-200">Architecting scalable, resilient, and efficient cloud solutions.</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-300 mb-6">I have hands-on experience deploying and managing applications on major cloud platforms. My focus is on creating robust back-end systems, implementing CI/CD pipelines for streamlined development, and ensuring secure, cost-effective infrastructure.</p>
+                    </div>
+
+                    <!-- Android Development -->
+                    <div class="reveal">
+                        <div class="flex items-center gap-4 mb-6">
+                            <i data-lucide="smartphone-charging" class="h-12 w-12 text-green-300"></i>
+                            <div>
+                                <h3 class="text-3xl font-bold text-white">Android Development</h3>
+                                <p class="text-green-200">Creating intuitive and high-performance native Android applications.</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-300 mb-6">With a strong command of Java and the Android SDK, I build user-centric mobile apps from concept to launch. My expertise includes modern UI/UX principles with Material Design, seamless API integration using Retrofit, and building responsive layouts for all device sizes.</p>
+                    </div>
+
+                     <!-- Web & UI/UX Development -->
+                    <div class="reveal">
+                        <div class="flex items-center gap-4 mb-6">
+                            <i data-lucide="figma" class="h-12 w-12 text-yellow-300"></i>
+                            <div>
+                                <h3 class="text-3xl font-bold text-white">Web & UI/UX</h3>
+                                <p class="text-yellow-200">Designing beautiful interfaces and building responsive web experiences.</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-300 mb-6">I bridge the gap between design and development, creating visually appealing user interfaces with Figma and bringing them to life with modern front-end technologies like React. I am passionate about crafting smooth user experiences and pixel-perfect designs.</p>
+                    </div>
+                </div>
+                 <div class="relative h-full min-h-[600px] hidden lg:block">
+                    <canvas id="skills-canvas"></canvas>
+                 </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <!-- ===== Projects Section ===== -->
+        <section id="projects" class="py-20 lg:py-32 reveal">
+            <h2 class="text-3xl md:text-5xl font-bold text-center text-white mb-16">Featured Projects</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Project 1: Remindify -->
+                <div class="glass-card p-8 flex flex-col h-full hover:border-blue-400/50 transition-colors">
+                    <h3 class="text-2xl font-bold text-white mb-2">Remindify</h3>
+                    <p class="text-slate-300 mb-4 flex-grow">A task management app enabling users to create, sort, and prioritize tasks with reminders. Integrated Firebase for real-time data syncing and implemented team collaboration features.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-blue-900/50 text-blue-300 text-xs font-medium px-2.5 py-1 rounded-full">Java</span>
+                        <span class="bg-blue-900/50 text-blue-300 text-xs font-medium px-2.5 py-1 rounded-full">Android Studio</span>
+                        <span class="bg-yellow-900/50 text-yellow-300 text-xs font-medium px-2.5 py-1 rounded-full">Firebase</span>
+                        <span class="bg-purple-900/50 text-purple-300 text-xs font-medium px-2.5 py-1 rounded-full">Material Design</span>
+                    </div>
+                </div>
+                <!-- Project 2: Daily Sphere -->
+                <div class="glass-card p-8 flex flex-col h-full hover:border-green-400/50 transition-colors">
+                    <h3 class="text-2xl font-bold text-white mb-2">Daily Sphere</h3>
+                    <p class="text-slate-300 mb-4 flex-grow">A news aggregator app pulling top headlines from multiple major news channels via News API. Utilized Retrofit for seamless API integration and focused on performance and real-time updates.</p>
+                    <div class="flex flex-wrap gap-2">
+                         <span class="bg-blue-900/50 text-blue-300 text-xs font-medium px-2.5 py-1 rounded-full">Java</span>
+                        <span class="bg-blue-900/50 text-blue-300 text-xs font-medium px-2.5 py-1 rounded-full">Android Studio</span>
+                        <span class="bg-red-900/50 text-red-300 text-xs font-medium px-2.5 py-1 rounded-full">News API</span>
+                        <span class="bg-green-900/50 text-green-300 text-xs font-medium px-2.5 py-1 rounded-full">Retrofit</span>
+                        <span class="bg-purple-900/50 text-purple-300 text-xs font-medium px-2.5 py-1 rounded-full">Material UI</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Education & Certifications Section ===== -->
+        <section id="education" class="py-20 lg:py-32 reveal">
+            <h2 class="text-3xl md:text-5xl font-bold text-center text-white mb-16">Education & Certifications</h2>
+            <div class="grid lg:grid-cols-5 gap-8">
+                <!-- Education -->
+                <div class="lg:col-span-2 space-y-8">
+                    <h3 class="text-2xl font-bold text-white text-center lg:text-left">Education</h3>
+                    <div class="glass-card p-6 flex items-center gap-4">
+                        <img src="https://www.gnauniversity.edu.in/assets/images/logo-light.png" alt="GNA University Logo" class="h-16 w-16 bg-white p-1 rounded-md object-contain">
+                        <div>
+                            <p class="text-sm text-slate-400">Aug 2022 - Present</p>
+                            <h4 class="font-bold text-white mt-1">Bachelor of Computer Science and Engineering</h4>
+                            <p class="text-slate-300">GNA University, Phagwara, Punjab</p>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 flex items-center gap-4">
+                         <img src="https://davchsp.com/wp-content/uploads/2023/12/logo-dav.png" alt="DAV College Logo" class="h-16 w-16 bg-white p-1 rounded-md object-contain">
+                        <div>
+                            <p class="text-sm text-slate-400">Apr 2020 - Mar 2021</p>
+                            <h4 class="font-bold text-white mt-1">Senior Secondary Examination (PSEB)</h4>
+                            <p class="text-slate-300">DAV college, Hoshiarpur (84%)</p>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 flex items-center gap-4">
+                         <div class="h-16 w-16 bg-slate-700 rounded-md flex items-center justify-center"><i data-lucide="school-2" class="h-8 w-8 text-white"></i></div>
+                        <div>
+                            <p class="text-sm text-slate-400">Completed Mar 2020</p>
+                            <h4 class="font-bold text-white mt-1">Secondary Education (ICSE)</h4>
+                            <p class="text-slate-300">ICSE Board (80%)</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Certifications -->
+                <div class="lg:col-span-3">
+                     <h3 class="text-2xl font-bold text-white mb-8 text-center lg:text-left">Certifications</h3>
+                    <div class="space-y-4">
+                        <div class="glass-card p-4 flex items-center gap-4"><i data-lucide="award" class="h-6 w-6 text-yellow-400"></i><span>AWS Data Center Technician</span></div>
+                        <div class="glass-card p-4 flex items-center gap-4"><i data-lucide="award" class="h-6 w-6 text-yellow-400"></i><span>Microsoft AZURE AZ900: Fundamentals</span></div>
+                        <div class="glass-card p-4 flex items-center gap-4"><i data-lucide="award" class="h-6 w-6 text-yellow-400"></i><span>Certified Front-end Developer</span></div>
+                        <div class="glass-card p-4 flex items-center gap-4"><i data-lucide="award" class="h-6 w-6 text-yellow-400"></i><span>AWS Academy Cloud Architecting</span></div>
+                        <div class="glass-card p-4 flex items-center gap-4"><i data-lucide="award" class="h-6 w-6 text-yellow-400"></i><span>NPTEL Introduction to Cloud Computing</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ===== Contact Section ===== -->
+        <section id="contact" class="py-20 lg:py-32 text-center reveal">
+            <h2 class="text-3xl md:text-5xl font-bold text-white mb-4">Let's Connect</h2>
+            <p class="text-slate-300 mb-8 max-w-xl mx-auto">I'm currently seeking new opportunities. Feel free to reach out for collaborations or just to say hello!</p>
+            <div class="glass-card max-w-4xl mx-auto p-8 md:p-12">
+                <div class="grid md:grid-cols-2 gap-12 text-left">
+                    <!-- Left Side Info -->
+                    <div>
+                        <h3 class="text-2xl md:text-3xl font-bold text-white mb-4">Let's discuss your Project</h3>
+                        <p class="text-slate-300 mb-8">I'm available for freelance work. Drop me a line if you have a project you think I'd be a good fit for.</p>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4">
+                                <div class="bg-blue-500/20 p-3 rounded-lg"><i data-lucide="map-pin" class="h-6 w-6 text-blue-400"></i></div>
+                                <div>
+                                    <p class="font-semibold text-white">Address:</p>
+                                    <p class="text-slate-400">Hoshiarpur, Punjab, India</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="bg-blue-500/20 p-3 rounded-lg"><i data-lucide="mail" class="h-6 w-6 text-blue-400"></i></div>
+                                <div>
+                                    <p class="font-semibold text-white">My Email:</p>
+                                    <p class="text-slate-400">arshpreetsingh5225@gmail.com</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Side Form -->
+                    <div>
+                        <p class="text-slate-300 mb-6">I'm always open to discussing product design work or partnership opportunities.</p>
+                        <form action="#" method="POST">
+                            <div class="grid sm:grid-cols-2 gap-6">
+                                <input type="text" name="name" placeholder="Name*" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                                <input type="email" name="email" placeholder="Email*" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                            </div>
+                            <div class="mt-6">
+                                <input type="text" name="subject" placeholder="Subject*" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                            </div>
+                            <div class="mt-6">
+                                <textarea name="message" placeholder="Message*" rows="4" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition"></textarea>
+                            </div>
+                            <div class="mt-6">
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-transform duration-300 hover:scale-105">Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                 <div class="mt-12 pt-8 border-t border-slate-700 flex justify-center items-center gap-6">
+                    <a href="https://www.linkedin.com/in/arshpreet-singh-2a1557253/" target="_blank" rel="noopener noreferrer" class="inline-block text-slate-400 hover:text-white transition-colors">
+                        <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                    </a>
+                     <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="inline-block text-slate-400 hover:text-white transition-colors">
+                        <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.168 6.839 9.49.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.031-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.378.203 2.398.1 2.65.64.7 1.03 1.595 1.03 2.688 0 3.848-2.338 4.695-4.566 4.943.359.308.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.001 10.001 0 0022 12c0-5.523-4.477-10-10-10z" clip-rule="evenodd"/></svg>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== Back to Top Button ===== -->
+    <button id="back-to-top-btn">
+        <i data-lucide="arrow-up" class="h-6 w-6"></i>
+    </button>
+
+    <!-- ===== Footer ===== -->
+    <footer class="border-t border-slate-800">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-slate-400">
+            <p>&copy; 2025 Arshpreet Singh. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const closeMenuBtn = document.getElementById('close-menu-btn');
+        mobileMenuBtn.addEventListener('click', () => mobileMenu.classList.add('open'));
+        closeMenuBtn.addEventListener('click', () => mobileMenu.classList.remove('open'));
+        
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.remove('open');
+            });
+        });
+
+        // Combined scroll event listener for performance
+        const header = document.getElementById('header');
+        const backToTopBtn = document.getElementById('back-to-top-btn');
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('header nav a');
+
+        function onScroll() {
+            const scrollY = window.pageYOffset;
+
+            // Header shadow
+            header.classList.toggle('shadow-lg', scrollY > 50);
+
+            // Back to Top Button
+            backToTopBtn.classList.toggle('active', scrollY > 300);
+
+            // Active Nav Link on Scroll
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Scroll Reveal Animation
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach(rev => {
+                const windowHeight = window.innerHeight;
+                const elementTop = rev.getBoundingClientRect().top;
+                const elementVisible = 150;
+                rev.classList.toggle("active", elementTop < windowHeight - elementVisible);
+            });
+        }
+
+        window.addEventListener('scroll', onScroll);
+        
+        // Initial call to set states
+        document.addEventListener('DOMContentLoaded', onScroll);
+
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+    </script>
+    
+    <!-- 3D Background and Hero Animation Script -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        function initThreeJS() {
+            const mouse = new THREE.Vector2();
+            window.addEventListener('mousemove', (event) => {
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            });
+
+            // --- Scene 1: Interactive Background ---
+            const bgCanvasElement = document.querySelector('#bg-canvas');
+            let bgRenderer, bgScene, bgCamera, bgShapes = [];
+            if (bgCanvasElement) {
+                bgScene = new THREE.Scene();
+                bgCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                bgRenderer = new THREE.WebGLRenderer({ canvas: bgCanvasElement, alpha: true });
+                bgRenderer.setPixelRatio(window.devicePixelRatio);
+                bgRenderer.setSize(window.innerWidth, window.innerHeight);
+                bgCamera.position.setZ(5);
+                
+                const bgGeometry = new THREE.IcosahedronGeometry(1, 0);
+                const bgMaterials = [
+                    new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.4, metalness: 0.6 }),
+                    new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.4, metalness: 0.6 }),
+                    new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4, metalness: 0.6 }),
+                    new THREE.MeshStandardMaterial({ color: 0x8b5cf6, roughness: 0.4, metalness: 0.6 })
+                ];
+                
+                for (let i = 0; i < 4; i++) {
+                    const mesh = new THREE.Mesh(bgGeometry, bgMaterials[i]);
+                    mesh.position.set((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 10 - 5);
+                    bgScene.add(mesh);
+                    bgShapes.push({mesh, initialScale: 1});
+                }
+                const bgPointLight = new THREE.PointLight(0xffffff, 2);
+                bgPointLight.position.set(5, 5, 5);
+                const bgAmbientLight = new THREE.AmbientLight(0xffffff, 0.8);
+                bgScene.add(bgPointLight, bgAmbientLight);
+            }
+
+            // --- Scene 2: Skills Animation ---
+            const skillsCanvas = document.getElementById('skills-canvas');
+            let skillsRenderer, skillsScene, skillsCamera, skillSprites;
+            if (skillsCanvas) {
+                skillsScene = new THREE.Scene();
+                skillsCamera = new THREE.PerspectiveCamera(75, skillsCanvas.clientWidth / skillsCanvas.clientHeight, 0.1, 1000);
+                skillsRenderer = new THREE.WebGLRenderer({ canvas: skillsCanvas, alpha: true, antialias: true });
+                skillsRenderer.setPixelRatio(window.devicePixelRatio);
+                skillsRenderer.setSize(skillsCanvas.clientWidth, skillsCanvas.clientHeight);
+                skillsCamera.position.setZ(10);
+                
+                const textureLoader = new THREE.TextureLoader();
+                const icons = [
+                    'https://img.icons8.com/color/96/jenkins.png', 'https://img.icons8.com/color/96/kubernetes.png',
+                    'https://img.icons8.com/ios-filled/100/ffffff/api-settings.png', 'https://img.icons8.com/color/96/github--v1.png',
+                    'https://img.icons8.com/color/96/docker.png', 'https://img.icons8.com/color/96/xml-file.png',
+                    'https://img.icons8.com/color/96/java-coffee-cup-logo.png', 'https://img.icons8.com/color/96/firebase.png',
+                    'https://img.icons8.com/color/96/react-native.png', 'https://img.icons8.com/color/96/figma--v1.png',
+                ];
+                skillSprites = new THREE.Group();
+                const radius = 6;
+                icons.forEach((iconUrl, i) => {
+                    const map = textureLoader.load(iconUrl);
+                    const material = new THREE.SpriteMaterial({ map: map, alphaTest: 0.5, transparent: true });
+                    const sprite = new THREE.Sprite(material);
+                    const angle = (i / icons.length) * Math.PI * 2;
+                    sprite.position.set(radius * Math.cos(angle), radius * Math.sin(angle), 0);
+                    sprite.scale.set(1.5, 1.5, 1.5);
+                    skillSprites.add(sprite);
+                });
+                skillsScene.add(skillSprites);
+                const skillsAmbientLight = new THREE.AmbientLight(0xffffff, 1.5);
+                skillsScene.add(skillsAmbientLight);
+            }
+            
+            window.addEventListener('click', () => {
+                bgShapes.forEach(shape => {
+                    // Implement pulse effect here
+                });
+            });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                if (bgRenderer) {
+                    bgShapes.forEach(shape => {
+                        shape.mesh.rotation.x += 0.001;
+                        shape.mesh.rotation.y += 0.002;
+                    });
+                    // Fully dynamic mouse follow
+                    bgCamera.position.x += (mouse.x * 2.5 - bgCamera.position.x) * 0.02;
+                    bgCamera.position.y += (-mouse.y * 2.5 - bgCamera.position.y) * 0.02;
+                    bgRenderer.render(bgScene, bgCamera);
+                }
+
+                if (skillsRenderer && skillSprites) {
+                    skillSprites.rotation.z -= 0.005;
+                    skillSprites.rotation.x = -mouse.y * 0.2;
+                    skillSprites.rotation.y = -mouse.x * 0.2;
+                    skillsRenderer.render(skillsScene, skillsCamera);
+                }
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                if(bgCamera) {
+                    bgCamera.aspect = width / height;
+                    bgCamera.updateProjectionMatrix();
+                    bgRenderer.setSize(width, height);
+                }
+                if (skillsCanvas) {
+                    const skillsRect = skillsCanvas.parentElement.getBoundingClientRect();
+                    if(skillsRect.width > 0 && skillsRect.height > 0){
+                       skillsCamera.aspect = skillsRect.width / skillsRect.height;
+                       skillsCamera.updateProjectionMatrix();
+                       skillsRenderer.setSize(skillsRect.width, skillsRect.height);
+                    }
+                }
+            });
+        }
+        
+        if (document.readyState === 'complete') {
+            initThreeJS();
+        } else {
+            window.addEventListener('load', initThreeJS);
+        }
+    </script>
+</body>
+</html>
+
